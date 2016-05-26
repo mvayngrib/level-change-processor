@@ -37,11 +37,17 @@ function Processor(opts) {
     start()
   })
 
+  Object.defineProperty(this, 'live', {
+    get: function () {
+      return self.parsedLatest === self.feed.change + (self.feed.queued || 0)
+    }
+  })
+
   function start () {
     if (!(typeof count === 'number' && typeof self.parsedLatest === 'number')) return
 
     self._checkLive()
-    self.feedReadStream = feed.createReadStream({since: parsedLatest, live: true})
+    self.feedReadStream = feed.createReadStream({since: self.parsedLatest, live: true})
     self.feedReadStream.pipe(self)
     self.feedReadStream.on('error', function(err) {
       self.emit('error', err)
@@ -55,10 +61,16 @@ function Processor(opts) {
 
 inherits(Processor, Writable)
 
-Processor.prototype._checkLive = function (parsedLatest) {
-  if (this.parsedLatest === this.feed.change + (this.feed.queued || 0)) {
-    this.emit('live')
-  }
+Processor.prototype._checkLive = function () {
+  if (this.live) this.emit('live')
+}
+
+Processor.prototype.onLive = function (cb) {
+  if (this.live) return cb()
+
+  this.once('live', function () {
+    cb()
+  })
 }
 
 Processor.prototype._write = function(obj, enc, cb) {
