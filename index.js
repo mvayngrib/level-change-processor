@@ -23,17 +23,17 @@ function Processor(opts) {
     start()
   })
 
-  this.parsedLatest
+  this.parsedLatest = 0
   db.get(this.key, this.dbOptions, function(err, latest) {
     if (self.destroyed) return
     if (err && !err.notFound) return self.emit('error', err)
 
-    if (err) parsedLatest = 0
-    else parsedLatest = parseInt(latest)
+    if (err) latest = 0
+    else latest = parseInt(latest)
 
-    if (isNaN(parsedLatest)) return self.emit('error', new Error('corrupted latest: ' + latest))
+    if (isNaN(latest)) return self.emit('error', new Error('corrupted latest: ' + latest))
 
-    self.parsedLatest = parsedLatest
+    self.parsedLatest = latest
     start()
   })
 
