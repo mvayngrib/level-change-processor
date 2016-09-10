@@ -23,7 +23,7 @@ function Processor(opts) {
     start()
   })
 
-  this.parsedLatest = 0
+  this.parsedLatest = null
   db.get(this.key, this.dbOptions, function(err, latest) {
     if (self.destroyed) return
     if (err && !err.notFound) return self.emit('error', err)
