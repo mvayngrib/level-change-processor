@@ -16,6 +16,7 @@ function Processor(opts) {
   this.dbOptions = opts.dbOptions || {valueEncoding: 'utf8'}
 
   var count
+  var firstChange = typeof feed.start === 'number' ? feed.start : 1
   feed.count(function (err, n) {
     if (err) self.emit('error', new Error('feed failed to initialize'))
 
@@ -28,7 +29,7 @@ function Processor(opts) {
     if (self.destroyed) return
     if (err && !err.notFound) return self.emit('error', err)
 
-    if (err) latest = 0
+    if (err) latest = firstChange - 1
     else latest = parseInt(latest)
 
     if (isNaN(latest)) return self.emit('error', new Error('corrupted latest: ' + latest))
