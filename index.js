@@ -37,12 +37,6 @@ function Processor(opts) {
     start()
   })
 
-  Object.defineProperty(this, 'live', {
-    get: function () {
-      return self.parsedLatest === self.feed.change + (self.feed.queued || 0)
-    }
-  })
-
   function start () {
     if (!(typeof count === 'number' && typeof self.parsedLatest === 'number')) return
 
@@ -61,15 +55,25 @@ function Processor(opts) {
 
 inherits(Processor, Writable)
 
-Processor.prototype._checkLive = function () {
-  if (this.live) this.emit('live')
+Processor.prototype._checkLive = function (cb) {
+  var self = this
+  this.feed.onready(function () {
+    var live = self.parsedLatest === self.feed.tentativeChange
+    if (self._live !== live) {
+      self._live = live
+      if (live) self.emit('live')
+    }
+
+    if (cb) cb(null, live)
+  })
 }
 
 Processor.prototype.onLive = function (cb) {
-  if (this.live) return cb()
+  var self = this
+  this._checkLive(function (err, live) {
+    if (live) return cb()
 
-  this.once('live', function () {
-    cb()
+    self.once('live', cb)
   })
 }
 
